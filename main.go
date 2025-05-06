@@ -113,7 +113,7 @@ func (app *App) getTaskByID(w http.ResponseWriter, r *http.Request) {
 	query := `SELECT id, title, description, due_date, priority, status FROM tasks WHERE id = $1`
 	err = app.DB.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Description, &task.DueDate, &task.Priority, &task.Status)
 	if err == sql.ErrNoRows {
-		http.Error(w, "Task not found", http.StatusNotFound)
+		http.Error(w, "tarea no encontrada", http.StatusNotFound)
 		return
 	} else if err != nil {
 		log.Printf("Error fetching task: %v", err)
