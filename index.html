@@ -6,71 +6,172 @@
     <title>Sistema de manejo de tareas</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #eef2f7;
+            color: #333;
+            line-height: 1.6;
         }
         h1 {
             text-align: center;
-            color: #333;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        input, button, select {
-            padding: 8px;
-            margin: 5px 0;
-            width: calc(100% - 16px);
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        button {
+            padding: 12px 15px;
+            margin: 8px 0;
+            width: calc(100% - 30px);
             box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
         }
         button {
-            background-color: #4CAF50;
+            background-color: #3498db;
             color: white;
             border: none;
             cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #2980b9;
         }
         #taskList {
             margin-top: 20px;
         }
         .task {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+         .task:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
         }
         .task-info {
             flex-grow: 1;
-            margin-right: 10px;
+            margin-right: 15px;
+            word-break: break-word;
         }
         .task-controls {
             display: flex;
             align-items: center;
+            flex-shrink: 0;
         }
         .task-controls select,
         .task-controls button {
             width: auto;
-            margin-left: 5px;
+            margin-left: 10px;
+            margin-top: 0;
+            margin-bottom: 0;
+            padding: 8px 12px;
+            font-size: 0.9rem;
         }
+         .task-controls button {
+             background-color: #2ecc71;
+         }
+         .task-controls button:hover {
+             background-color: #27ae60;
+         }
         .error {
-            color: red;
+            color: #e74c3c;
             display: none;
-            margin-top: 10px;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fdeded;
+            border: 1px solid #e74c3c;
+            border-radius: 5px;
         }
         .sort-controls {
             margin-bottom: 20px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
         }
         .sort-controls label {
             margin-right: 10px;
+            font-weight: bold;
+        }
+         .sort-controls select {
+             width: auto;
+             flex-grow: 1;
+             margin: 0;
+         }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            input, button, select {
+                 width: 100%;
+                 margin: 8px 0;
+                 padding: 10px;
+            }
+             button {
+                 width: 100%;
+             }
+            .task {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .task-info {
+                margin-right: 0;
+                margin-bottom: 10px;
+                width: 100%;
+            }
+            .task-controls {
+                width: 100%;
+                justify-content: flex-start;
+            }
+             .task-controls select,
+             .task-controls button {
+                 margin-left: 0;
+                 margin-right: 10px;
+                 width: auto;
+             }
+             .task-controls button:last-child {
+                 margin-right: 0;
+             }
+             .sort-controls {
+                 flex-direction: column;
+                 align-items: flex-start;
+             }
+             .sort-controls label {
+                 margin-right: 0;
+                 margin-bottom: 5px;
+             }
+             .sort-controls select {
+                 width: 100%;
+             }
         }
     </style>
 </head>
@@ -110,6 +211,7 @@
                 <option value="due_date">Fecha de Vencimiento</option>
                 <option value="title">Título</option>
                 <option value="status">Estado</option>
+                <option value="due_soon">Próximas a Vencer (7 días)</option>
             </select>
         </div>
 
@@ -282,27 +384,46 @@
 
         function sortAndDisplayTasks() {
             const criteria = document.getElementById('sortCriteria').value;
-            let sortedTasks = [...allTasks];
+            let tasksToDisplay = [...allTasks];
 
-            switch (criteria) {
-                case 'priority':
-                    sortedTasks.sort((a, b) => a.priority - b.priority);
-                    break;
-                case 'due_date':
-                    sortedTasks.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-                    break;
-                case 'title':
-                    sortedTasks.sort((a, b) => a.title.localeCompare(b.title));
-                    break;
-                case 'status':
-                    sortedTasks.sort((a, b) => a.status.localeCompare(b.status));
-                    break;
-                default:
-                    sortedTasks.sort((a, b) => a.priority - b.priority);
-                    break;
+            if (criteria === 'due_soon') {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const sevenDaysFromNow = new Date();
+                sevenDaysFromNow.setDate(today.getDate() + 7);
+                sevenDaysFromNow.setHours(23, 59, 59, 999);
+
+                tasksToDisplay = tasksToDisplay.filter(task => {
+                    const taskDueDate = new Date(task.due_date);
+                    taskDueDate.setHours(0, 0, 0, 0);
+
+                    return taskDueDate >= today && taskDueDate <= sevenDaysFromNow;
+                });
+
+                tasksToDisplay.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+
+            } else {
+                switch (criteria) {
+                    case 'priority':
+                        tasksToDisplay.sort((a, b) => a.priority - b.priority);
+                        break;
+                    case 'due_date':
+                        tasksToDisplay.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+                        break;
+                    case 'title':
+                        tasksToDisplay.sort((a, b) => a.title.localeCompare(b.title));
+                        break;
+                    case 'status':
+                        tasksToDisplay.sort((a, b) => a.status.localeCompare(b.status));
+                        break;
+                    default:
+                        tasksToDisplay.sort((a, b) => a.priority - b.priority);
+                        break;
+                }
             }
 
-            renderTasks(sortedTasks);
+            renderTasks(tasksToDisplay);
         }
 
         async function fetchAndDisplayTasks() {
